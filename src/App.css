@@ -1,0 +1,160 @@
+/* General Styles */
+body {
+  font-family: 'Roboto', sans-serif;
+  margin: 0;
+  padding: 0;
+  background-color: rgb(80,12,4);
+  background-image: url('bg.png'), url('main-bg.jpg');
+  background-position: center center, center center;
+  background-size: cover, cover;
+  background-repeat: no-repeat, no-repeat;
+}
+
+/* Header Styles */
+.header {
+  background: transparent;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  padding: 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.header-right button {
+  background-color: #ffffff;
+  color: #000000;
+  border: none;
+  padding: 15px 30px;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+/* Info Section Styles */
+.info-section {
+  margin: auto;
+  width: 150px;
+  padding: 10px 160px;
+  color: #fefefe;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 20px;
+}
+
+.infoContainer {
+  max-width: 445px;
+  min-width: 440px;
+  display: flex;
+  justify-content: space-between;
+}
+
+.infoLeft {
+  color: #ffffff;
+  flex: 1; /* This makes infoLeft take up available space */
+  text-align: left;
+}
+
+.infoRight {
+  color: #ffffff;
+  flex: 1; /* This makes infoRight take up available space */
+  text-align: right;
+}
+
+.header-right button:hover {
+  background-color: #ffffff;
+}
+
+.stakeBtn button:hover,
+.unstakeBtn button:hover {
+  background-color: #ffffff;
+}
+
+/* Main Content Styles */
+.main {
+  max-width: 1000px;
+  margin: 40px auto;
+  padding: 40px;
+  border-radius: 8px;
+}
+
+.deposit-section,
+.deposit-button {
+  margin: auto;
+  width: 150px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: row;
+  gap: 10px;
+}
+
+.deposit-button button {
+  background-color: #fefefe;
+  color: #303030;
+  border: none;
+  padding: 10px 90px;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.claimBtn {
+  margin: auto;
+  width: 150px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: row;
+  gap: 10px;
+}
+
+.claimBtn button {
+  background-color: #fefefe;
+  color: #303030;
+  border: none;
+  padding: 10px 120px;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  white-space: nowrap;
+}
+
+.stakedAmount-input {
+  display: flex;
+  align-items: center;
+  padding: 10px 260px;
+  margin-right: 5px;
+}
+
+.stakedAmount-input input {
+  width: 470px;
+  padding: 8px;
+  border: 1px solid #ffffff;
+  border-radius:20px;
+}
+
+.stakeBtn,
+.unstakeBtn {
+  margin: 10px;
+}
+
+.deposit-button button:disabled {
+  background-color: #656565;
+  cursor: not-allowed;
+}
+
+.deposit-button button:hover:not(:disabled) {
+  background-color: #ffffff;
+}
+
+/* Footer Styles */
+.footer {
+  text-align: center;
+  color: #ffffff;
+  padding: 15px;
+  position: fixed;
+  bottom: 0;
+  width: 100%;
+  background: transparent;
+}
