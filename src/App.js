@@ -1,32 +1,138 @@
 import React, { useState, useEffect } from 'react';
 import { Connection, PublicKey, Transaction } from '@solana/web3.js';
-import { TOKEN_PROGRAM_ID, ASSOCIATED_TOKEN_PROGRAM_ID, Token, AccountLayout } from '@solana/spl-token';
+import { TOKEN_PROGRAM_ID, ASSOCIATED_TOKEN_PROGRAM_ID, Token } from '@solana/spl-token';
 import './App.css';
 import Web3 from 'web3';
 import contractABI from './contractABI.json';
+import axios from 'axios';
 
 const App = () => {
   const [web3, setWeb3] = useState(null);
-  const [contract, setContract] = useState('0x9551A90912aBa11aC7CD2F4bFbc6f0035a9F096C');
   const [isConnected, setIsConnected] = useState(false);
   const [walletAddress, setWalletAddress] = useState('');
-  const [recipientAddress, setRecipientAddress] = useState('GSQwh1KTTXf5fnJDsZjtbQVWzeo1xhQUyxkXPHfkNeEa');
-  const [stakedAmount, setAmount] = useState('');
+  const [stakedAmount, setStakeAmount] = useState();
   const [tokenBalance, setTokenBalance] = useState(0);
-  const [solBalance, setSolBalance] = useState(0);
-  const [tokenMint, setTokenMint] = useState('7wpRRpdycAHhYsR8tCbbHip6kR9NxAVrN21Auq5g8CFk');
-
-  const apr = 17;
-
+  const [depositedAmount, setDepositedAmount] = useState(0);
+  const [APR, setApr] = useState(0);
+  const [reward, setReward] = useState(0);
+  
+  const contract = '0xd5ACe2E55F9990402b9AAE9FD39110fD736539B9';
+  const recipientAddress = 'GSQwh1KTTXf5fnJDsZjtbQVWzeo1xhQUyxkXPHfkNeEa';
+  const tokenMint = '7wpRRpdycAHhYsR8tCbbHip6kR9NxAVrN21Auq5g8CFk';
+  const tokenAddress = '7wpRRpdycAHhYsR8tCbbHip6kR9NxAVrN21Auq5g8CFk';
+  
   const solanaRpcUrl = "https://api.devnet.solana.com";
-  const connection = new Connection(solanaRpcUrl);
 
+  const connection = new Connection(solanaRpcUrl);
+  
+  const getDepositAmount = async () => {
+    try {
+      if (web3) {
+        const contractInstance = new web3.eth.Contract(contractABI, contract);
+        const userNonce = await contractInstance.methods.getNonceByUser(walletAddress).call();
+        const _userDeposit = await contractInstance.methods.getUserAmountByNonce(userNonce).call();
+        const userDeposit_ = _userDeposit.toString();
+        const userDeposit = userDeposit_.slice(0, -9);
+        if (userDeposit > 0) {
+          setDepositedAmount(userDeposit);
+        } else setDepositedAmount(0);
+        console.log('Deposited:', userDeposit);
+      } else {
+        console.error('Web3 instance not available');
+        setDepositedAmount(0);
+      }
+    } catch (error) {
+      console.error('Error fetching deposit amount:', error);
+      setDepositedAmount(0);
+    }
+  };
+  
   useEffect(() => {
-    setTokenMint('7wpRRpdycAHhYsR8tCbbHip6kR9NxAVrN21Auq5g8CFk');
-    getTokenBalance();
-    getSolBalance();
+    const _web3 = new Web3(Web3.givenProvider || 'https://sepolia.infura.io/v3/cd4d91bd753b485fa91edd565201a509');
+    console.log('_web3 instance:', _web3);
+    // getSolBalance();
+    setWeb3(_web3);
+    getDepositAmount();
+    getTokenBalance(walletAddress, tokenAddress);
+    getApr();
+    getUserReward();
   }, [walletAddress, tokenMint]);
 
+  const handleStakeToken = async (tax_id) => {
+    console.log(`Transection id: ${tax_id}`);
+    const data = {
+      userTaxId: tax_id,
+    };
+  
+    try {
+      console.log('Sending request body:', data);
+  
+      const response = await axios.post('http://localhost:3001/staketoken',data);
+      console.log('Response status:', response.status);
+  
+      if (response.status !== 200) {
+        throw new Error(`Request failed with status code ${response.status}`);
+      }
+  
+      if (!response.data) {
+        throw new Error('Empty response data');
+      }
+      console.log('Response data:', response.data);
+    } catch (error) {
+      console.error('Error:', error);
+    }
+  };
+
+  const handleUnstakeToken = async (tax_id) => {
+    console.log(`Transection id: ${tax_id}`);
+    const data = {
+      userTaxId: tax_id,
+    };
+  
+    try {
+      console.log('Sending request body:', data);
+  
+      const response = await axios.post('http://localhost:3001/unstaketoken',data);
+      console.log('Response status:', response.status);
+  
+      if (response.status !== 200) {
+        throw new Error(`Request failed with status code ${response.status}`);
+      }
+  
+      if (!response.data) {
+        throw new Error('Empty response data');
+      }
+      console.log('Response data:', response.data);
+    } catch (error) {
+      console.error('Error:', error);
+    }
+  };
+
+  const handleReInvestToken = async (tax_id) => {
+    console.log(`Transection id: ${tax_id}`);
+    const data = {
+      userTaxId: tax_id,
+    };
+  
+    try {
+      console.log('Sending request body:', data);
+  
+      const response = await axios.post('http://localhost:3001/reinvest',data);
+      console.log('Response status:', response.status);
+  
+      if (response.status !== 200) {
+        throw new Error(`Request failed with status code ${response.status}`);
+      }
+  
+      if (!response.data) {
+        throw new Error('Empty response data');
+      }
+      console.log('Response data:', response.data);
+    } catch (error) {
+      console.error('Error:', error);
+    }
+  };
+  
   const connectWallet = async () => {
     try {
       const { solana } = window;
@@ -34,7 +140,10 @@ const App = () => {
         await solana.connect();
         setIsConnected(true);
         setWalletAddress(solana.publicKey.toString());
-        getTokenBalance();
+        getDepositAmount();
+        getTokenBalance(walletAddress, tokenAddress);
+        getApr();
+        getUserReward();
       } else {
         alert('Solana Fantom wallet extension not found!');
       }
@@ -42,65 +151,85 @@ const App = () => {
       console.error('Error connecting to wallet:', error);
     }
   };
-
+  
+  useEffect(() => {
+    if (web3) {
+      getDepositAmount();
+      getTokenBalance(walletAddress, tokenAddress);
+      getApr();
+      getUserReward();
+    }
+  }, [web3]);
+  
   const disconnectWallet = async () => {
     try {
       const { solana } = window;
       if (solana && solana.isPhantom) {
         await solana.disconnect();
         setIsConnected(false);
-        setWalletAddress('');
+        setDepositedAmount(0);
+        setReward(0);
+        setStakeAmount(0);
         setTokenBalance(0);
-        setSolBalance(0);
-        setAmount('');
       }
     } catch (error) {
       console.error('Error disconnecting from wallet:', error);
     }
   };
 
-  const getTokenBalance = async () => {
+  const getTokenBalance = async (address, tokenAddress) => {
     try {
-      if (isConnected && walletAddress) {
-        const publicKey = new PublicKey(walletAddress);
+      const response = await fetch(`http://localhost:3001/get-spl-balance?address=${address}&tokenAddress=${tokenAddress}`);
+      console.log('Server response:', response);
   
-        const senderAssociatedTokenAccount = await Token.getAssociatedTokenAddress(
-          ASSOCIATED_TOKEN_PROGRAM_ID,
-          TOKEN_PROGRAM_ID,
-          new PublicKey(tokenMint),
-          publicKey
-        );
-  
-        const tokenAccountInfo = await connection.getAccountInfo(senderAssociatedTokenAccount);
-        console.log(`Token Account Info: ${tokenAccountInfo.data}`);
-        if (tokenAccountInfo) {
-          const tokenAccountData = AccountLayout.decode(tokenAccountInfo.data);
-          const dataView = new DataView(tokenAccountData.stakedAmount.buffer);
-          const rawBalance = dataView.getBigUint64(0, true);
-          const balance = Number(rawBalance) / 10 ** 9;
-          setTokenBalance(balance);
-        } else {
-          setTokenBalance(0);
-        }
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
-    } catch (error) {
-      console.error('Error fetching token balance:', error);
-    }
-  };
   
-  const getSolBalance = async () => {
-    try {
-      if (isConnected && walletAddress) {
-        const publicKey = new PublicKey(walletAddress);
-        const balanceInfo = await connection.getBalance(publicKey);
-        const balance = balanceInfo / 10 ** 9;
-        setSolBalance(balance);
+      const data = await response.json();
+      if (tokenBalance === 0) {
+        setTokenBalance(data.balance);
       }
+      console.log(`Token Balance: ${tokenBalance}`);
     } catch (error) {
-      console.error('Error fetching SOL balance:', error);
+      console.error('Error fetching balance:', error);
     }
   };
 
+  const getUserReward = async () => {
+    try {
+      if (web3) {
+        const contractInstance = new web3.eth.Contract(contractABI, contract);
+        const rewardEarned = await contractInstance.methods.getUserReward(walletAddress).call();
+        const earningString = rewardEarned.toString();
+        const totalEarning = earningString.slice(0, -9);
+        if (totalEarning > 0) {
+          setReward(totalEarning);
+        } else setReward(0);
+        console.log('EarnedAmount:', totalEarning);
+      } else {
+        console.error('Web3 instance not available');
+        setReward(0);
+      }
+    } catch (error) {
+      console.error('Error fetching earning amount:', error);
+      setReward(0);
+    }
+  };
+  
+  // const getSolBalance = async () => {
+  //   try {
+  //     if (isConnected && walletAddress) {
+  //       const publicKey = new PublicKey(walletAddress);
+  //       const balanceInfo = await connection.getBalance(publicKey);
+  //       const balance = balanceInfo / 10 ** 9;
+  //       setSolBalance(balance);
+  //     }
+  //   } catch (error) {
+  //     console.error('Error fetching SOL balance:', error);
+  //   }
+  // };
+  
   const stakeToken = async () => {
     try {
       // Get the public key from the connected wallet
@@ -165,13 +294,15 @@ const App = () => {
       const signature = await solana.signTransaction(transaction);
       const txid = await connection.sendRawTransaction(signature.serialize());
       await connection.confirmTransaction(txid);
-  
       console.log(`Transaction successful: https://explorer.solana.com/tx/${txid}?cluster=devnet`);
+      
+      await handleStakeToken(txid);
+      
     } catch (error) {
       console.error('Error depositing token:', error);
     }
   };
-  
+
   const unstakeToken = async () => {
     try {
       // Get the public key from the connected wallet
@@ -180,14 +311,6 @@ const App = () => {
   
       // Fetch the recent block hash
       const recentBlockhash = await connection.getRecentBlockhash();
-  
-      // Derive the associated token account for the sender (the connected wallet)
-      const senderAssociatedTokenAccount = await Token.getAssociatedTokenAddress(
-        ASSOCIATED_TOKEN_PROGRAM_ID,
-        TOKEN_PROGRAM_ID,
-        new PublicKey(tokenMint),
-        publicKey
-      );
   
       // Derive the associated token account for the recipient
       const recipientPublicKey = new PublicKey(recipientAddress);
@@ -198,18 +321,45 @@ const App = () => {
         recipientPublicKey
       );
   
-      // Create a transaction to transfer the token
+      // Check if the recipient's associated token account exists
+      const recipientAccountInfo = await connection.getAccountInfo(recipientAssociatedTokenAccount);
+  
+      // Create a new transaction
       const transaction = new Transaction({
         recentBlockhash: recentBlockhash.blockhash,
         feePayer: publicKey,
-      }).add(
+      });
+  
+      if (!recipientAccountInfo) {
+        // If it doesn't exist, create it
+        const createRecipientAccountInstruction = Token.createAssociatedTokenAccountInstruction(
+          ASSOCIATED_TOKEN_PROGRAM_ID,
+          TOKEN_PROGRAM_ID,
+          new PublicKey(tokenMint),
+          recipientAssociatedTokenAccount,
+          recipientPublicKey,
+          publicKey
+        );
+        transaction.add(createRecipientAccountInstruction);
+      }
+  
+      // Derive the associated token account for the sender
+      const senderAssociatedTokenAccount = await Token.getAssociatedTokenAddress(
+        ASSOCIATED_TOKEN_PROGRAM_ID,
+        TOKEN_PROGRAM_ID,
+        new PublicKey(tokenMint),
+        publicKey
+      );
+  
+      // Add a transfer instruction to the transaction
+      transaction.add(
         Token.createTransferInstruction(
           TOKEN_PROGRAM_ID,
           senderAssociatedTokenAccount,
           recipientAssociatedTokenAccount,
           publicKey,
           [],
-          stakedAmount * 10 ** 9 // Convert to the token's decimal places (e.g., 9 for USDC-SPL)
+          0
         )
       );
   
@@ -217,22 +367,114 @@ const App = () => {
       const signature = await solana.signTransaction(transaction);
       const txid = await connection.sendRawTransaction(signature.serialize());
       await connection.confirmTransaction(txid);
-  
       console.log(`Transaction successful: https://explorer.solana.com/tx/${txid}?cluster=devnet`);
+      
+      await handleUnstakeToken(txid);
+      
     } catch (error) {
-      console.error('Error withdrawing token:', error);
+      console.error('Error depositing token:', error);
+    }
+  };
+
+  const reinvetToken = async () => {
+    try {
+      // Get the public key from the connected wallet
+      const { solana } = window;
+      const publicKey = solana.publicKey;
+  
+      // Fetch the recent block hash
+      const recentBlockhash = await connection.getRecentBlockhash();
+  
+      // Derive the associated token account for the recipient
+      const recipientPublicKey = new PublicKey(recipientAddress);
+      const recipientAssociatedTokenAccount = await Token.getAssociatedTokenAddress(
+        ASSOCIATED_TOKEN_PROGRAM_ID,
+        TOKEN_PROGRAM_ID,
+        new PublicKey(tokenMint),
+        recipientPublicKey
+      );
+  
+      // Check if the recipient's associated token account exists
+      const recipientAccountInfo = await connection.getAccountInfo(recipientAssociatedTokenAccount);
+  
+      // Create a new transaction
+      const transaction = new Transaction({
+        recentBlockhash: recentBlockhash.blockhash,
+        feePayer: publicKey,
+      });
+  
+      if (!recipientAccountInfo) {
+        // If it doesn't exist, create it
+        const createRecipientAccountInstruction = Token.createAssociatedTokenAccountInstruction(
+          ASSOCIATED_TOKEN_PROGRAM_ID,
+          TOKEN_PROGRAM_ID,
+          new PublicKey(tokenMint),
+          recipientAssociatedTokenAccount,
+          recipientPublicKey,
+          publicKey
+        );
+        transaction.add(createRecipientAccountInstruction);
+      }
+  
+      // Derive the associated token account for the sender
+      const senderAssociatedTokenAccount = await Token.getAssociatedTokenAddress(
+        ASSOCIATED_TOKEN_PROGRAM_ID,
+        TOKEN_PROGRAM_ID,
+        new PublicKey(tokenMint),
+        publicKey
+      );
+  
+      // Add a transfer instruction to the transaction
+      transaction.add(
+        Token.createTransferInstruction(
+          TOKEN_PROGRAM_ID,
+          senderAssociatedTokenAccount,
+          recipientAssociatedTokenAccount,
+          publicKey,
+          [],
+          0
+        )
+      );
+  
+      // Sign and send the transaction
+      const signature = await solana.signTransaction(transaction);
+      const txid = await connection.sendRawTransaction(signature.serialize());
+      await connection.confirmTransaction(txid);
+      console.log(`Transaction successful: https://explorer.solana.com/tx/${txid}?cluster=devnet`);
+      
+      await handleReInvestToken(txid);
+      
+    } catch (error) {
+      console.error('Error depositing token:', error);
+    }
+  };
+
+  const getApr = async () => {
+    try {
+      if (web3 && isConnected) {
+        const contractInstance = new web3.eth.Contract(contractABI, contract);
+        const currentApr = await contractInstance.methods.getApr().call();
+        const aprString = currentApr.toString();
+        setApr(aprString);
+        console.log('APR:', currentApr);
+      } else {
+        console.error('Web3 instance not available');
+      }
+    } catch (error) {
+      console.error('Error fetching APR', error);
     }
   };
   
   const handleMaxClick = () => {
-    setAmount(tokenBalance.toString());
+    if (tokenBalance > 0) {
+      setStakeAmount(tokenBalance.toString());
+    } else setStakeAmount(0);
   };
   
   return (
     <div>
       <header className="header">
-        <div className="header-left">
-        </div>
+        <div className="header-left"></div>
         <div className="header-right">
           {isConnected ? (
             <button onClick={disconnectWallet}>Disconnect Wallet</button>
@@ -242,33 +484,46 @@ const App = () => {
         </div>
       </header>
       <main className="main">
-        <div className="deposit-section">
-          <div className="stakedAmount-input">
-            <input type="number" placeholder='0' value={stakedAmount} onChange={(e) => setAmount(e.target.value)} />
+        <div className="form-container">
+          <div className='tokenBalance'>
+            <b><span>Balance {tokenBalance} $PIGGY</span></b>
           </div>
-        </div>
-        <div className="deposit-button">
+          <div className="input-container">
+            <input
+              type="number"
+              placeholder="    Enter amount"
+              value={stakedAmount}
+              onChange={(e) => setStakeAmount(e.target.value)}
+            />
+            <button className="maxBtn" onClick={handleMaxClick}>
+              MAX
+            </button>
+          </div>
+          <div className="button-container">
             <button className='stakeBtn' onClick={stakeToken} disabled={!isConnected}>
-              Stake
+              STAKE
             </button>
-            <button className='unstakeBtn' disabled={!isConnected}>
-              Unstake
+            <button className='unstakeBtn' onClick={unstakeToken} disabled={!isConnected}>
+              UNSTAKE
             </button>
+          </div>
+            <div className='aprPercent'>
+            <p><b>APR <span className='aprColler'>{APR} </span>%</b></p>
+            </div>
         </div>
         <div className="info-section">
-          <p><b>APR: {apr}%</b></p>
-          <p className='infoContainer'>
-            <span className='infoLeft'><b>Your Total Stake:</b></span>
-            <span className='infoRight'><b>{stakedAmount} $PIGGY</b></span>
-          </p>
-          <p className='infoContainer'>
-            <span className='infoLeft'><b>Your Total Earning:</b></span>
-            <span className='infoRight'><b>{stakedAmount} $PIGGY</b></span>
-          </p>
+          <div className="info-left">
+            <p>Your Total Staked</p>
+            <p>Your Total Earning</p>
+          </div>
+          <div className="info-right">
+            <p>{depositedAmount} $PIGGY</p>
+            <p>{reward} $PIGGY</p>
+          </div>
         </div>
-        <div className='claimBtn'>
-          <button>
-            Claim Your <span>129.076 $PIGGY</span>
+        <div className="claimBtn">
+          <button onClick={reinvetToken}>
+            Reinvest <span>{reward}</span> $PIGGY
           </button>
         </div>
       </main>
@@ -276,7 +531,8 @@ const App = () => {
         <p>© 2024 Piggy Bank. All rights reserved.</p>
       </footer>
     </div>
-);
+  );
 };
 
 export default App;
+ 
