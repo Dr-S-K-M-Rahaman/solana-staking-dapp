@@ -67,7 +67,7 @@ const App = () => {
     try {
       console.log('Sending request body:', data);
   
-      const response = await axios.post('http://localhost:3001/staketoken',data);
+      const response = await axios.post('https://1873-115-187-60-129.ngrok-free.app/staketoken',data);
       console.log('Response status:', response.status);
   
       if (response.status !== 200) {
@@ -92,7 +92,7 @@ const App = () => {
     try {
       console.log('Sending request body:', data);
   
-      const response = await axios.post('http://localhost:3001/unstaketoken',data);
+      const response = await axios.post('https://1873-115-187-60-129.ngrok-free.app/unstaketoken',data);
       console.log('Response status:', response.status);
   
       if (response.status !== 200) {
@@ -117,7 +117,7 @@ const App = () => {
     try {
       console.log('Sending request body:', data);
   
-      const response = await axios.post('http://localhost:3001/reinvest',data);
+      const response = await axios.post('https://1873-115-187-60-129.ngrok-free.app/reinvest',data);
       console.log('Response status:', response.status);
   
       if (response.status !== 200) {
@@ -169,7 +169,7 @@ const App = () => {
         setIsConnected(false);
         setDepositedAmount(0);
         setReward(0);
-        setStakeAmount(0);
+        setStakeAmount();
         setTokenBalance(0);
       }
     } catch (error) {
@@ -179,7 +179,7 @@ const App = () => {
 
   const getTokenBalance = async (address, tokenAddress) => {
     try {
-      const response = await fetch(`http://localhost:3001/get-spl-balance?address=${address}&tokenAddress=${tokenAddress}`);
+      const response = await fetch(`https://1873-115-187-60-129.ngrok-free.app/get-spl-balance?address=${address}&tokenAddress=${tokenAddress}`);
       console.log('Server response:', response);
   
       if (!response.ok) {
@@ -468,7 +468,7 @@ const App = () => {
   const handleMaxClick = () => {
     if (tokenBalance > 0) {
       setStakeAmount(tokenBalance.toString());
-    } else setStakeAmount(0);
+    } else setStakeAmount();
   };
   
   return (
