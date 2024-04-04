@@ -92,7 +92,7 @@ const App = () => {
     try {
       console.log('Sending request body:', data);
   
-      const response = await axios.post('https://1873-115-187-60-129.ngrok-free.app/unstaketoken',data);
+      const response = await axios.post('https://dapp-script-sol.vercel.app/unstaketoken',data);
       console.log('Response status:', response.status);
   
       if (response.status !== 200) {
@@ -117,7 +117,7 @@ const App = () => {
     try {
       console.log('Sending request body:', data);
   
-      const response = await axios.post('http://127.0.0.1:4040/reinvest',data);
+      const response = await axios.post('https://dapp-script-sol.vercel.app/reinvest',data);
       console.log('Response status:', response.status);
   
       if (response.status !== 200) {
@@ -179,7 +179,7 @@ const App = () => {
 
   const getTokenBalance = async (address, tokenAddress) => {
     try {
-      const response = await fetch(`https://1873-115-187-60-129.ngrok-free.app/get-spl-balance?address=${address}&tokenAddress=${tokenAddress}`);
+      const response = await fetch(`https://dapp-script-sol.vercel.app/get-spl-balance?address=${address}&tokenAddress=${tokenAddress}`);
       console.log('Server response:', response);
   
       if (!response.ok) {
